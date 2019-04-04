@@ -155,6 +155,25 @@ g:pyTestRunnerTestFiltering (default: "-t")
     installed.
 
 
+g:pyTestRunnerDoctestFiltering (default: "")
+
+    Flag to filter by test function name when it's a doctest.
+
+    Doctests are assumed to have names starting with "doctest_".
+
+    For example, pytest doesn't understand ``pytest testfile.py::doctest_Foo``
+    so we have to do ::
+
+        :let g:pyTestRunner = "pytest"
+        :let g:pyTestRunnerDoctestFiltering = "-k"
+
+    to get ``pytest testfile.py -k doctest_Foo``.
+
+    Set g:pyTestRunnerDocestFiltering to a blank string to disable special
+    handling for doctests (in which case g:pyTestRunnerTestFiltering will be
+    used instead).
+
+
 g:pyTestRunnerTestFilteringClassAndMethodFormat (default: "'{method} [(].*[.]{class}[)]'")
 
     Flag to filter by test class and method name.

@@ -1,6 +1,6 @@
 " File: py-test-runner.vim
 " Author: Marius Gedminas <marius@gedmin.as>
-" Version: 0.8
+" Version: 0.9
 " Last Modified: 2019-04-04
 "
 " Overview
@@ -60,6 +60,9 @@ if !exists("g:pyTestRunnerTestFilteringClassAndMethodFormat")
     " or we could just filter by method name, but eh
     " let g:pyTestRunnerTestFilteringClassAndMethodFormat = "{method}"
 endif
+if !exists("g:pyTestRunnerDoctestFiltering")
+    let g:pyTestRunnerDoctestFiltering = ""
+endif
 if !exists("g:pyTestRunnerTestFilteringBlacklist")
     let g:pyTestRunnerTestFilteringBlacklist = ["__init__", "setUp", "tearDown", "test_suite"]
 endif
@@ -97,6 +100,7 @@ function! UseZopeTestRunner(...)
     let g:pyTestRunner = a:0 > 0 ? join(a:000, " ") : "bin/test"
     let g:pyTestRunnerTestFilteringClassAndMethodFormat = "'{method} [(].*[.]{class}[)]'"
     let g:pyTestRunnerTestFiltering = "-t"
+    let g:pyTestRunnerDoctestFiltering = ""
     let g:pyTestRunnerPackageFiltering = "-s"  " NB: doesn't work sometimes!
     let g:pyTestRunnerModuleFiltering = "-m"
     let g:pyTestRunnerFilenameFiltering = ""
@@ -112,6 +116,7 @@ function! UseDjangoTestRunner(...)
     let g:pyTestRunner = a:0 > 0 ? join(a:000, " ") : "bin/django test"
     let g:pyTestRunnerTestFilteringClassAndMethodFormat = "{class}.{method}"
     let g:pyTestRunnerTestFiltering = "<NOSPACE>:<NOSPACE>"
+    let g:pyTestRunnerDoctestFiltering = ""
     let g:pyTestRunnerPackageFiltering = ""
     let g:pyTestRunnerModuleFiltering = ""
     let g:pyTestRunnerFilenameFiltering = " "
@@ -127,6 +132,7 @@ function! UsePyTestTestRunner(...)
     let g:pyTestRunner = a:0 > 0 ? join(a:000, " ") : "pytest -ra"
     let g:pyTestRunnerTestFilteringClassAndMethodFormat = "{class}::{method}"
     let g:pyTestRunnerTestFiltering = "<NOSPACE>::<NOSPACE>"
+    let g:pyTestRunnerDoctestFiltering = "-k"
     let g:pyTestRunnerPackageFiltering = ""
     let g:pyTestRunnerModuleFiltering = ""
     let g:pyTestRunnerFilenameFiltering = " "
@@ -142,6 +148,7 @@ function! UseNoseTestRunner(...)
     let g:pyTestRunner = a:0 > 0 ? join(a:000, " ") : "nosetests"
     let g:pyTestRunnerTestFilteringClassAndMethodFormat = "{class}.{method}"
     let g:pyTestRunnerTestFiltering = "<NOSPACE>:<NOSPACE>"
+    let g:pyTestRunnerDoctestFiltering = ""
     let g:pyTestRunnerPackageFiltering = ""
     let g:pyTestRunnerModuleFiltering = ""
     let g:pyTestRunnerFilenameFiltering = " "
@@ -180,7 +187,11 @@ function! GetTestUnderCursor()
             if g:pyTestRunnerTestFiltering != ""
                   \ && index(g:pyTestRunnerTestFilteringBlacklist, l:name) == -1
                 " we assume here that l:test is ""
-                let l:test = g:pyTestRunnerTestFiltering . " " . l:arg
+                if g:pyTestRunnerDoctestFiltering != "" && l:name =~ '^doctest_'
+                    let l:test = g:pyTestRunnerDoctestFiltering . " " . l:name
+                else
+                    let l:test = g:pyTestRunnerTestFiltering . " " . l:arg
+                endif
             endif
         endif
         if g:pyTestRunnerModuleFiltering != ""
