@@ -197,6 +197,9 @@ def test_get_module():
     rc = RunnerConfiguration()
     assert rc.get_module('foo.py') == 'foo'
     assert rc.get_module('foo/bar.py') == 'bar'
+    assert rc.get_module('foo/bar.txt') == ''
+    assert rc.get_module('foo/bar.rst') == ''
+    assert rc.get_module('foo/bar.test') == ''
     assert rc.get_module('foo/__init__.py') == ''
 
 

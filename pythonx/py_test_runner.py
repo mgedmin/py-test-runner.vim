@@ -176,8 +176,8 @@ class RunnerConfiguration(object):
         return filename
 
     def get_module(self, filename):
-        module = os.path.splitext(os.path.basename(filename))[0]
-        if module == '__init__':
+        module, ext = os.path.splitext(os.path.basename(filename))
+        if module == '__init__' or ext != '.py':
             return ''
         return module
 
