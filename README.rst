@@ -10,6 +10,16 @@ Supports various Python test runners including
 - zope.testrunner
 - django test
 
+Demo:
+
+.. image:: https://asciinema.org/a/238972.svg
+   :alt: asciicast
+   :width: 692
+   :height: 490
+   :align: center
+   :target: https://asciinema.org/a/238972
+
+
 .. contents::
 
 
