@@ -12,10 +12,10 @@ Supports various Python test runners including
 
 Demo:
 
-.. image:: https://asciinema.org/a/238972.svg
+.. image:: screencast.gif
    :alt: asciicast
-   :width: 692
-   :height: 490
+   :width: 590
+   :height: 396
    :align: center
    :target: https://asciinema.org/a/238972
 
