@@ -1,7 +1,7 @@
 " File: py-test-runner.vim
 " Author: Marius Gedminas <marius@gedmin.as>
-" Version: 1.0
-" Last Modified: 2019-04-04
+" Version: 1.1
+" Last Modified: 2019-05-09
 "
 " Overview
 " --------
@@ -31,6 +31,9 @@
 " :RunTestUnderCursor -- launches the test runner (configured via
 " g:pyTestRunner) with :make
 "
+" :RunTest [<class>.]<test> -- launches the test runner for a given test
+" in the current file
+"
 " :RunLastTestAgain -- runs the last test again (useful when you've moved the
 " cursor away while editing)
 "
@@ -40,29 +43,30 @@
 
 " Backwards compatibility
 function! UseZopeTestRunner(...)
-    " Assumes you have bin/test, generates command lines of the form
-    "   bin/test -s <package> -m <module> -t '{method} [(].*{class}[)]'
-    call pytestrunner#use("zope", join(a:000, " "))
+  " Assumes you have bin/test, generates command lines of the form
+  "   bin/test -s <package> -m <module> -t '{method} [(].*{class}[)]'
+  call pytestrunner#use("zope", join(a:000, " "))
 endfunction
 
 function! UseDjangoTestRunner(...)
-    " Assumes you have django-nose, generates command lines of the form
-    "   bin/django test <filename>:{class}.{method}
-    call pytestrunner#use("django", join(a:000, " "))
+  " Assumes you have django-nose, generates command lines of the form
+  "   bin/django test <filename>:{class}.{method}
+  call pytestrunner#use("django", join(a:000, " "))
 endfunction
 
 function! UsePyTestTestRunner(...)
-    " Assumes you have py.test, generates command lines of the form
-    "   pytest <filename>::{class}::{method}
-    call pytestrunner#use("pytest", join(a:000, " "))
+  " Assumes you have py.test, generates command lines of the form
+  "   pytest <filename>::{class}::{method}
+  call pytestrunner#use("pytest", join(a:000, " "))
 endfunction
 
 function! UseNoseTestRunner(...)
-    " Assumes you have nose, generates command lines of the form
-    "   nosetests <filename>:{class}.{method}
-    call pytestrunner#use("nose", join(a:000, " "))
+  " Assumes you have nose, generates command lines of the form
+  "   nosetests <filename>:{class}.{method}
+  call pytestrunner#use("nose", join(a:000, " "))
 endfunction
 
-command! RunTestUnderCursor	call pytestrunner#run_test_under_cursor()
-command! RunLastTestAgain	call pytestrunner#run_last_test_again()
-command! CopyTestUnderCursor	call pytestrunner#copy_test_under_cursor()
+command! -bar RunTestUnderCursor  call pytestrunner#run_test_under_cursor()
+command! -bar -nargs=1 RunTest    call pytestrunner#run_test(<q-args>)
+command! -bar RunLastTestAgain    call pytestrunner#run_last_test_again()
+command! -bar CopyTestUnderCursor call pytestrunner#copy_test_under_cursor()

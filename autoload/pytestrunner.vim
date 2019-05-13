@@ -46,6 +46,11 @@ function pytestrunner#get_test_under_cursor()
   return pyxeval("py_test_runner.get_test(vim.current.buffer.name, vim.eval('l:tag'))")
 endf
 
+function pytestrunner#get_test_from_tag(tag)
+  pyx import py_test_runner, vim
+  return pyxeval("py_test_runner.get_test(vim.current.buffer.name, vim.eval('a:tag'))")
+endf
+
 function pytestrunner#get_clipboard_command()
   let tag = pytestrunner#get_tag_under_cursor()
   pyx import py_test_runner, vim
@@ -73,6 +78,10 @@ endf
 
 function pytestrunner#run_test_under_cursor()
   call pytestrunner#run(pytestrunner#get_test_under_cursor())
+endf
+
+function pytestrunner#run_test(tag)
+  call pytestrunner#run(pytestrunner#get_test_from_tag(a:tag))
 endf
 
 function pytestrunner#run_last_test_again()
