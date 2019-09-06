@@ -1,7 +1,7 @@
 " File: py-test-runner.vim
 " Author: Marius Gedminas <marius@gedmin.as>
-" Version: 1.1
-" Last Modified: 2019-05-09
+" Version: 1.2
+" Last Modified: 2019-09-06
 "
 " Overview
 " --------
@@ -11,10 +11,14 @@
 "
 " Installation
 " ------------
-" Make sure you have pythonhelper.vim installed.  Then copy the three files
-" (plugin/py-test-runner.vim, autoload/pytestrunner.vim and
-" pythonx/py_test_runner.py) into the corresponding directories under
-" $HOME/.vim.  Or, better, use a plugin manager like vim-plug.
+" Make sure you have taghelper.vim or pythonhelper.vim installed.
+" Then copy the three files (plugin/py-test-runner.vim,
+" autoload/pytestrunner.vim and pythonx/py_test_runner.py) into the
+" corresponding directories under $HOME/.vim.
+" Or, better, use a plugin manager like vim-plug:
+"
+"     Plug 'mgedmin/taghelper.vim'
+"     Plug 'mgedmin/py-test-runner.vim'
 "
 " This plugin most likely requires vim 7.0 or maybe even 8.0.  It also needs
 " Vim with python support.

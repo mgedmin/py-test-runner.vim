@@ -26,9 +26,13 @@ Demo:
 Installation
 ------------
 
-I recommend vim-plug_.
+I recommend vim-plug_::
 
-You'll also need pythonhelper.vim_, and I recommend asyncrun.vim_ too.
+    Plug 'mgedmin/taghelper.vim'
+    Plug 'mgedmin/py-test-runner.vim'
+
+You'll also need taghelper.vim_ (or the older pythonhelper.vim_), and I
+recommend asyncrun.vim_ too.
 
 Needs Vim built with Python support.
 
@@ -45,6 +49,11 @@ The plugin defines the following commands:
     cursor is.  Can run the test asynchronously if you have asyncrun.vim_
     installed and have defined the ``:Make`` command `as documented in the wiki
     <https://github.com/skywind3000/asyncrun.vim/wiki/Replace-old-make-command-with-AsyncRun>`__.
+
+
+**:RunTest** name-of-test
+
+    Runs a single test function/method/class/module.
 
 
 **:RunLastTestAgain**
@@ -761,3 +770,4 @@ Licence: MIT.
 .. _vim-plug: https://github.com/junegunn/vim-plug
 .. _asyncrun.vim: https://github.com/skywind3000/asyncrun.vim
 .. _pythonhelper.vim: https://github.com/mgedmin/pythonhelper.vim
+.. _taghelper.vim: https://github.com/mgedmin/taghelper.vim

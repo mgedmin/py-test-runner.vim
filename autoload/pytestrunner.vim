@@ -32,7 +32,10 @@ function pytestrunner#get_test_command()
 endf
 
 function pytestrunner#get_tag_under_cursor()
-  if exists("*TagInStatusLine")
+  if exists("*taghelper#curtag()")
+    " defined by https://github.com/mgedmin/taghelper.vim
+    return taghelper#curtag()
+  elseif exists("*TagInStatusLine")
     " defined by https://github.com/mgedmin/pythonhelper.vim
     return TagInStatusLine()
   else
