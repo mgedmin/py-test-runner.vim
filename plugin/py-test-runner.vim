@@ -1,7 +1,7 @@
 " File: py-test-runner.vim
 " Author: Marius Gedminas <marius@gedmin.as>
-" Version: 1.2
-" Last Modified: 2019-09-06
+" Version: 1.2.1
+" Last Modified: 2020-05-28
 "
 " Overview
 " --------

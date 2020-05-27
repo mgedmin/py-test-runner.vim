@@ -1,6 +1,6 @@
 """
 " HACK to fore-reload it from vim with :source %
-pyx 'import sys; sys.modules.pop("py_test_runner", None); import py_test_runner'  # noqa
+pyx import sys; sys.modules.pop("py_test_runner", None); import py_test_runner
 finish
 """
 
@@ -91,6 +91,7 @@ class RunnerConfiguration(object):
     def clean_tag(tag):
         # Older versions of pythonhelper.vim return [fulltagname]
         # Newer versions of pythonhelper.vim return [in fulltagname (type)]
+        # taghelper.vim returns [fulltagname]
         tag = tag.strip('[]')
         if tag.startswith('in '):
             tag = tag[len('in '):]
@@ -115,6 +116,8 @@ class RunnerConfiguration(object):
 
     @staticmethod
     def is_doctest(tag):
+        # My convention is to put doctests in the docstrings of
+        # functions named doctest_Foo.
         return not tag.startswith(('test', 'Test'))
 
     @staticmethod
@@ -242,7 +245,8 @@ class PyTestRunner(object):
 
     def __init__(self, config_file=CONFIG_FILE):
         self.config = self.load_configuration(config_file)
-        self.use_runner(self.config.get('default', 'runner'))
+        self.use_runner(self.config.get('default', 'runner'),
+                        is_default=True)
 
     @staticmethod
     def load_configuration(filename=CONFIG_FILE):
@@ -251,12 +255,13 @@ class PyTestRunner(object):
         cp.read([os.path.expanduser(filename)])
         return cp
 
-    def use_runner(self, runner):
+    def use_runner(self, runner, is_default=False):
         section = 'runner:%s' % runner
         if not self.config.has_section(section):
             print('No [%s] section in %s' % (section, CONFIG_FILE))
             return
         self.runner = runner
+        self.runner_is_default = is_default
 
     def get_option(self, section, option, default=''):
         if self.config.has_option(section, option):
@@ -324,6 +329,8 @@ class PyTestRunner(object):
             'default', 'ignore_functions_and_methods').split()
         runner = self.get_default_runner(filename)
         self.apply_config(rc, 'runner:%s' % runner)
+        # maybe I should do this only when runner_is_default is set?
+        self.apply_config(rc, 'default')
         self.apply_overrides(rc, filename)
         return rc
 
