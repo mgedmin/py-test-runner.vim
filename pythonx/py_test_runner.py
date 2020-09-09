@@ -81,6 +81,7 @@ class RunnerConfiguration(object):
     filter_for_class = ''
     filter_for_method = ''
     absolute_filenames = False
+    relative_filenames = False
     clipboard_extras = ''
     clipboard_extras_suffix = ''
     ignore_functions_and_methods = (
@@ -176,6 +177,8 @@ class RunnerConfiguration(object):
     def prepare_filename(self, filename):
         if self.absolute_filenames:
             filename = os.path.abspath(filename)
+        elif self.relative_filenames:
+            filename = os.path.relpath(filename)
         return filename
 
     def get_module(self, filename):
@@ -315,6 +318,8 @@ class PyTestRunner(object):
             section, 'filter_for_method', rc.filter_for_method)
         rc.absolute_filenames = self.get_option_bool(
             section, 'absolute_filenames', rc.absolute_filenames)
+        rc.relative_filenames = self.get_option_bool(
+            section, 'relative_filenames', rc.relative_filenames)
         rc.clipboard_extras = self.get_option(
             section, 'clipboard_extras', rc.clipboard_extras)
         rc.clipboard_extras_suffix = self.get_option(
