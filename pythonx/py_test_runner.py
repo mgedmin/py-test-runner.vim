@@ -35,11 +35,12 @@ ignore_functions_and_methods =
 
 [runner:pytest]
 command = pytest -ra
-filter_for_file     = {filename}
-filter_for_doctest  = -k {function}
-filter_for_function = {filename}::{function}
-filter_for_class    = {filename}::{class}
-filter_for_method   = {filename}::{class}::{method}
+filter_for_file         = {filename}
+filter_for_doctest_file = -k {function}
+filter_for_doctest      = {filename}::{full_module}.{function}
+filter_for_function     = {filename}::{function}
+filter_for_class        = {filename}::{class}
+filter_for_method       = {filename}::{class}::{method}
 absolute_filenames = 1
 
 [runner:nose]
@@ -76,6 +77,7 @@ class RunnerConfiguration(object):
     filter_for_directory = ''
     filter_for_package = ''
     filter_for_module = ''
+    filter_for_doctest_file = ''
     filter_for_doctest = ''
     filter_for_function = ''
     filter_for_class = ''
@@ -144,13 +146,20 @@ class RunnerConfiguration(object):
     def is_ignored(self, name):
         return name in self.ignore_functions_and_methods
 
-    def construct_tag_filter(self, tag):
+    def construct_tag_filter(self, filename, tag):
         tag = self.clean_tag(tag)
         if not tag:
             # Should not happen.
             return ''
         if self.is_doctest(tag) and self.filter_for_doctest:
-            return self.expand(self.filter_for_doctest, function=tag)
+            module = self.get_module(filename)
+            package = self.get_package(filename)
+            if package:
+                full_module = '%s.%s' % (package, module)
+            else:
+                full_module = module
+            return self.expand(self.filter_for_doctest, function=tag,
+                               full_module=full_module)
         if self.is_inner_function(tag):
             # Most likely a test that has inner functions/classes.
             tag = self.strip_inner_function(tag)
@@ -204,7 +213,8 @@ class RunnerConfiguration(object):
 
     def construct_doctest_file_filter(self, filename):
         return self.expand(
-            self.filter_for_doctest or self.filter_for_function,
+            self.filter_for_doctest_file or self.filter_for_doctest
+            or self.filter_for_function,
             function=os.path.basename(filename),
         )
 
@@ -213,7 +223,7 @@ class RunnerConfiguration(object):
         if self.is_doctest_file(filename):
             tag_filter = self.construct_doctest_file_filter(filename)
         else:
-            tag_filter = self.construct_tag_filter(tag)
+            tag_filter = self.construct_tag_filter(filename, tag)
         if '{filename}' in tag_filter:
             return self.expand(tag_filter, filename=filename)
         else:
@@ -308,6 +318,8 @@ class PyTestRunner(object):
             section, 'filter_for_package', rc.filter_for_package)
         rc.filter_for_module = self.get_option(
             section, 'filter_for_module', rc.filter_for_module)
+        rc.filter_for_doctest_file = self.get_option(
+            section, 'filter_for_doctest_file', rc.filter_for_doctest_file)
         rc.filter_for_doctest = self.get_option(
             section, 'filter_for_doctest', rc.filter_for_doctest)
         rc.filter_for_function = self.get_option(

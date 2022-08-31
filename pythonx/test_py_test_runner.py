@@ -1,4 +1,5 @@
 import os
+from functools import partial
 
 from py_test_runner import RunnerConfiguration, PyTestRunner
 
@@ -98,7 +99,7 @@ def test_construct_tag_filter():
     rc.filter_for_function = '-f {function}'
     rc.filter_for_class = '-c {class}'
     rc.filter_for_method = '-m {class}::{method}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('test_foo') == '-f test_foo'
     assert ctf('doctest_foo') == '-d doctest_foo'
     assert ctf('TestFoo') == '-c TestFoo'
@@ -108,35 +109,35 @@ def test_construct_tag_filter():
 def test_construct_tag_filter_cleans_the_tag():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('[in test_foo (function)]') == '-f test_foo'
 
 
 def test_construct_tag_filter_no_doctest_specialization():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('doctest_foo') == '-f doctest_foo'
 
 
 def test_construct_tag_filter_no_class_specialization():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('TestFoo') == '-f TestFoo'
 
 
 def test_construct_tag_filter_no_method_specialization():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('TestFoo.test_foo') == '-f test_foo'
 
 
 def test_construct_tag_filter_inner_function_in_method():
     rc = RunnerConfiguration()
     rc.filter_for_method = '-m {class}::{method}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('TestFoo.test_bar.inner') == '-m TestFoo::test_bar'
 
 
@@ -144,7 +145,7 @@ def test_construct_tag_filter_inner_function_in_function():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
     rc.filter_for_method = '-m {class}::{method}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('test_bar.inner') == '-f test_bar'
 
 
@@ -153,7 +154,7 @@ def test_construct_tag_filter_ignored_method():
     rc.filter_for_function = '-f {function}'
     rc.filter_for_class = '-c {class}'
     rc.filter_for_method = '-m {class}::{method}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('TestFoo.__init__') == '-c TestFoo'
 
 
@@ -161,27 +162,27 @@ def test_construct_tag_filter_ignored_method_no_class_specialization():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
     rc.filter_for_method = '-m {class}::{method}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('TestFoo.__init__') == '-f TestFoo'
 
 
 def test_construct_tag_filter_ignored_function():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('setUp') == ''
 
 
 def test_construct_tag_filter_no_configuration():
     rc = RunnerConfiguration()
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('test_foo') == ''
 
 
 def test_construct_tag_filter_no_tag():
     rc = RunnerConfiguration()
     rc.filter_for_function = '-f {function}'
-    ctf = rc.construct_tag_filter
+    ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('') == ''
     assert ctf('[]') == ''
 
@@ -380,6 +381,7 @@ def test_use_runner_bad():
 def test_get_runner():
     ptr = PyTestRunner('/dev/null')
     rc = ptr.get_runner('')
+    rc.filter_for_doctest = '-k {function}'  # makes the output neater
     rc.absolute_filenames = False  # makes the test easier
     assert rc.construct_command('foo.py', 'doctest_bar') == (
         'pytest -ra foo.py -k doctest_bar'
