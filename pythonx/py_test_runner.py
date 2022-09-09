@@ -43,6 +43,13 @@ filter_for_class        = {filename}::{class}
 filter_for_method       = {filename}::{class}::{method}
 absolute_filenames = 1
 
+[runner:unittest]
+command = python -m unittest discover
+#filter_for_module       = -k {module}
+filter_for_class        = -k {class}
+filter_for_method       = -k '{method} [(].*[.]{class}[)]'
+relative_filenames = 1
+
 [runner:nose]
 command = nosetests
 filter_for_file     = {filename}
