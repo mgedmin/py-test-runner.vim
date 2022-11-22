@@ -128,7 +128,13 @@ class RunnerConfiguration(object):
     def is_doctest(tag):
         # My convention is to put doctests in the docstrings of
         # functions named doctest_Foo.
-        return not tag.startswith(('test', 'Test'))
+        # Things like test_foo (function), TestFoo (class), FooTests (class),
+        # or FooTests.test_foo (method) should return False.
+        return (
+            not tag.startswith(('test', 'Test'))
+            and '.test' not in tag
+            and not tag.endswith('Tests')
+        )
 
     @staticmethod
     def is_inner_function(tag):
