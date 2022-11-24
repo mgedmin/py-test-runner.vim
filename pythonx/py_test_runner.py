@@ -284,7 +284,10 @@ class PyTestRunner(object):
     @staticmethod
     def load_configuration(filename=CONFIG_FILE):
         cp = ConfigParser()
-        cp.readfp(StringIO(DEFAULT_CONFIGURATION))
+        if hasattr(cp, 'read_string'):  # Python 3.2+
+            cp.read_string(DEFAULT_CONFIGURATION)
+        else:  # Python 2.7 compat, dropped in 3.12
+            cp.readfp(StringIO(DEFAULT_CONFIGURATION))
         cp.read([os.path.expanduser(filename)])
         return cp
 
