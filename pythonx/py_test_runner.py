@@ -79,6 +79,7 @@ clipboard_extras = -pvc
 
 class RunnerConfiguration(object):
 
+    workdir = ''
     command = ''
     filter_for_file = ''
     filter_for_directory = ''
@@ -200,7 +201,7 @@ class RunnerConfiguration(object):
         if self.absolute_filenames:
             filename = os.path.abspath(filename)
         elif self.relative_filenames:
-            filename = os.path.relpath(filename)
+            filename = os.path.relpath(filename, start=self.workdir)
         return filename
 
     def get_module(self, filename):
@@ -254,17 +255,22 @@ class RunnerConfiguration(object):
             )
 
     def construct_command(self, filename, tag):
+        # This is not actually used because we're using Vim's :make or asyncrun's :Make,
+        # so we must split the command into command and arguments.
         filter = self.construct_filter(filename, tag)
         return self.join(self.command, filter)
 
     def construct_clipboard_command(self, filename, tag):
         filter = self.construct_filter(filename, tag)
-        return self.join(
+        command = self.join(
             self.command,
             self.clipboard_extras,
             filter,
             self.clipboard_extras_suffix,
         )
+        if self.workdir:
+            command = '(cd %s && %s)' % (self.workdir, command)
+        return command
 
 
 class PyTestRunner(object):
@@ -321,6 +327,8 @@ class PyTestRunner(object):
             self.apply_config(rc, section)
 
     def apply_config(self, rc, section):
+        rc.workdir = self.get_option(
+            section, 'workdir', rc.workdir)
         rc.command = self.get_option(
             section, 'command', rc.command)
         rc.filter_for_file = self.get_option(
@@ -382,7 +390,11 @@ def get_test_runner(filename):
 
 
 def get_test_command(filename):
-    return get_test_runner(filename).command
+    rr = get_test_runner(filename)
+    if rr.workdir:
+        return 'cd %s && %s' % (rr.workdir, rr.command)
+    else:
+        return rr.command
 
 
 def get_test(filename, tag):
