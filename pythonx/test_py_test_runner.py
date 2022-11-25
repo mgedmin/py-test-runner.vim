@@ -6,6 +6,7 @@ from py_test_runner import RunnerConfiguration, PyTestRunner
 
 def test_RunnerConfiguration_clean_tag():
     clean_tag = RunnerConfiguration.clean_tag
+    assert clean_tag('foo') == 'foo'
     assert clean_tag('[foo]') == 'foo'
     assert clean_tag('[in Foo (class)]') == 'Foo'
 
@@ -43,6 +44,7 @@ def test_RunnerConfiguration_is_doctest():
     assert not is_doctest('test_foo')
     assert not is_doctest('TestFoo')
     assert not is_doctest('TestFoo.test_foo')
+    assert not is_doctest('FooTests.test_foo')
     assert not is_doctest('test_foo.something')
 
 
@@ -111,6 +113,18 @@ def test_construct_tag_filter_cleans_the_tag():
     rc.filter_for_function = '-f {function}'
     ctf = partial(rc.construct_tag_filter, 'filename.py')
     assert ctf('[in test_foo (function)]') == '-f test_foo'
+
+
+def test_construct_tag_filter_doctest_full_module():
+    rc = RunnerConfiguration()
+    rc.is_package_directory = lambda d: (
+        os.path.relpath(d).replace(os.path.sep, '/') in (
+            'src/pkg',
+        )
+    )
+    rc.filter_for_doctest = '-m {full_module} -f {function}'
+    ctf = partial(rc.construct_tag_filter, 'src/pkg/filename.py')
+    assert ctf('doctest_foo') == '-m pkg.filename -f doctest_foo'
 
 
 def test_construct_tag_filter_no_doctest_specialization():
@@ -357,6 +371,17 @@ def test_construct_clipboard_command_no_extras():
     ccc = rc.construct_clipboard_command
     assert ccc('test_foo.py', 'test_bar') == (
         'pytest -ra test_foo.py::test_bar'
+    )
+
+
+def test_construct_clipboard_command_with_workdir():
+    rc = RunnerConfiguration()
+    rc.workdir = 'src'
+    rc.command = 'pytest'
+    rc.filter_for_function = '{filename}::{function}'
+    ccc = rc.construct_clipboard_command
+    assert ccc('test_foo.py', 'test_bar') == (
+        '(cd src && pytest test_foo.py::test_bar)'
     )
 
 

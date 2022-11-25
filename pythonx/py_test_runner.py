@@ -7,13 +7,13 @@ finish
 import os
 
 try:
-    # Python 2
-    from cStringIO import StringIO
-    from ConfigParser import SafeConfigParser as ConfigParser
-except ImportError:  # pragma: nocover
     # Python 3
     from io import StringIO
     from configparser import ConfigParser
+except ImportError:  # pragma: nocover
+    # Python 2
+    from cStringIO import StringIO
+    from ConfigParser import SafeConfigParser as ConfigParser
 
 try:
     import vim
@@ -202,7 +202,8 @@ class RunnerConfiguration(object):
         if self.absolute_filenames:
             filename = os.path.abspath(filename)
         elif self.relative_filenames:
-            filename = os.path.relpath(filename, start=self.relative_to or self.workdir)
+            relative_to = self.relative_to or self.workdir
+            filename = os.path.relpath(filename, start=relative_to)
         return filename
 
     def get_module(self, filename):
@@ -256,8 +257,9 @@ class RunnerConfiguration(object):
             )
 
     def construct_command(self, filename, tag):
-        # This is not actually used because we're using Vim's :make or asyncrun's :Make,
-        # so we must split the command into command and arguments.
+        # This is not actually used because we're using Vim's :make or
+        # asyncrun's :Make, so we must split the command into command and
+        # arguments.
         filter = self.construct_filter(filename, tag)
         return self.join(self.command, filter)
 
@@ -286,7 +288,7 @@ class PyTestRunner(object):
         cp = ConfigParser()
         if hasattr(cp, 'read_string'):  # Python 3.2+
             cp.read_string(DEFAULT_CONFIGURATION)
-        else:  # Python 2.7 compat, dropped in 3.12
+        else:  # pragma: nocover -- Python 2.7 compat, dropped in 3.12
             cp.readfp(StringIO(DEFAULT_CONFIGURATION))
         cp.read([os.path.expanduser(filename)])
         return cp
