@@ -1,7 +1,8 @@
 import os
+import textwrap
 from functools import partial
 
-from py_test_runner import RunnerConfiguration, PyTestRunner
+from py_test_runner import PyTestRunner, RunnerConfiguration
 
 
 def test_RunnerConfiguration_clean_tag():
@@ -419,4 +420,31 @@ def test_use_runner():
     rc = ptr.get_runner('')
     assert rc.construct_command('foo.py', 'doctest_bar') == (
         'bin/test -m foo -t doctest_bar'
+    )
+
+
+def test_overrides(tmp_path):
+    configfile = tmp_path / 'py-test-runner.cfg'
+    configfile.write_text(textwrap.dedent('''
+        [default]
+        runner = pytest
+
+        [path:/tmp]
+        absolute_filenames = no
+        relative_filenames = yes
+        relative_to = /tmp
+
+        [path:/tmp/zope.thing]
+        runner = zope
+    '''))
+    ptr = PyTestRunner(configfile)
+    assert ptr.get_default_runner('/tmp/file.py') == 'pytest'
+    rc = ptr.get_runner('/tmp/file.py')
+    assert rc.construct_command('/tmp/file.py', 'test_bar') == (
+        'pytest -ra file.py::test_bar'
+    )
+    assert ptr.get_default_runner('/tmp/zope.thing/file.py') == 'zope'
+    rc = ptr.get_runner('/tmp/zope.thing/file.py')
+    assert rc.construct_command('/tmp/zope.thing/file.py', 'doctest_bar') == (
+        'bin/test -m file -t doctest_bar'
     )
