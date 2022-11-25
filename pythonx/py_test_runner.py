@@ -41,14 +41,14 @@ filter_for_doctest      = {filename}::{full_module}.{function}
 filter_for_function     = {filename}::{function}
 filter_for_class        = {filename}::{class}
 filter_for_method       = {filename}::{class}::{method}
-absolute_filenames = 1
+#absolute_filenames = yes
 
 [runner:unittest]
 command = python -m unittest discover
 #filter_for_module       = -k {module}
 filter_for_class        = -k {class}
 filter_for_method       = -k '{method} [(].*[.]{class}[)]'
-relative_filenames = 1
+#relative_filenames = yes
 
 [runner:nose]
 command = nosetests
@@ -56,7 +56,7 @@ filter_for_file     = {filename}
 filter_for_function = {filename}:{function}
 filter_for_class    = {filename}:{class}
 filter_for_method   = {filename}:{class}.{method}
-absolute_filenames = 1
+#absolute_filenames = yes
 
 [runner:django]
 command = bin/django test
@@ -64,7 +64,7 @@ filter_for_file     = {filename}
 filter_for_function = {filename}:{function}
 filter_for_class    = {filename}:{class}
 filter_for_method   = {filename}:{class}.{method}
-absolute_filenames = 1
+#absolute_filenames = yes
 
 [runner:zope]
 command = bin/test
@@ -279,12 +279,13 @@ class RunnerConfiguration(object):
 class PyTestRunner(object):
 
     def __init__(self, config_file=CONFIG_FILE):
+        self.config_file = config_file
         self.config = self.load_configuration(config_file)
         self.use_runner(self.config.get('default', 'runner'),
                         is_default=True)
 
     @staticmethod
-    def load_configuration(filename=CONFIG_FILE):
+    def load_configuration(filename):
         cp = ConfigParser()
         if hasattr(cp, 'read_string'):  # Python 3.2+
             cp.read_string(DEFAULT_CONFIGURATION)
@@ -296,7 +297,7 @@ class PyTestRunner(object):
     def use_runner(self, runner, is_default=False):
         section = 'runner:%s' % runner
         if not self.config.has_section(section):
-            print('No [%s] section in %s' % (section, CONFIG_FILE))
+            print('No [%s] section in %s' % (section, self.config_file))
             return
         self.runner = runner
         self.runner_is_default = is_default
@@ -386,7 +387,8 @@ class PyTestRunner(object):
 #
 
 def get_test_runner(filename):
-    r = PyTestRunner()
+    config_file = vim.eval('g:pyTestRunnerConfigFile') or CONFIG_FILE
+    r = PyTestRunner(config_file)
     runner = vim.eval('g:pyTestRunner')
     if runner:
         r.use_runner(runner)

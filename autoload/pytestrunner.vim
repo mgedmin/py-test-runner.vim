@@ -1,6 +1,9 @@
 if !exists("g:pyVimRunCommand")
   let g:pyVimRunCommand = ""
 endif
+if !exists("g:pyTestRunnerConfigFile")
+  let g:pyTestRunnerConfigFile = ""
+endif
 if !exists("g:pyTestRunner")
   let g:pyTestRunner = ""
 endif

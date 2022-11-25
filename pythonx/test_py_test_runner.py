@@ -2,6 +2,7 @@ import os
 import textwrap
 from functools import partial
 
+import py_test_runner
 from py_test_runner import PyTestRunner, RunnerConfiguration
 
 
@@ -448,3 +449,71 @@ def test_overrides(tmp_path):
     assert rc.construct_command('/tmp/zope.thing/file.py', 'doctest_bar') == (
         'bin/test -m file -t doctest_bar'
     )
+
+
+class MockVim:
+
+    def __init__(self, overrides={}):
+        self._exprs = {
+            'g:pyTestRunnerConfigFile': '/dev/null',
+            'g:pyTestRunner': '',
+            'g:pyTestRunnerCommand': '',
+        }
+        self._exprs.update(overrides)
+
+    def eval(self, expr):
+        return self._exprs[expr]
+
+
+def test_vim_interface(monkeypatch):
+    monkeypatch.setattr(py_test_runner, 'vim', MockVim())
+    rc = py_test_runner.get_test_runner('tests.py')
+    assert rc.command == 'pytest -ra'
+
+
+def test_vim_interface_with_runner_override(monkeypatch):
+    monkeypatch.setattr(py_test_runner, 'vim', MockVim({
+        'g:pyTestRunner': 'zope',
+    }))
+    rc = py_test_runner.get_test_runner('tests.py')
+    assert rc.command == 'bin/test'
+
+
+def test_vim_interface_with_runner_command_override(monkeypatch):
+    monkeypatch.setattr(py_test_runner, 'vim', MockVim({
+        'g:pyTestRunnerCommand': 'env/bin/pytest',
+    }))
+    rc = py_test_runner.get_test_runner('tests.py')
+    assert rc.command == 'env/bin/pytest'
+
+
+def test_get_test_command(monkeypatch):
+    monkeypatch.setattr(py_test_runner, 'vim', MockVim())
+    gtc = py_test_runner.get_test_command
+    assert gtc('tests.py') == 'pytest -ra'
+
+
+def test_get_test_command_adds_workdir(monkeypatch, tmp_path):
+    configfile = tmp_path / 'py-test-runner.cfg'
+    configfile.write_text(textwrap.dedent('''
+        [default]
+        runner = pytest
+        workdir = src
+    '''))
+    monkeypatch.setattr(py_test_runner, 'vim', MockVim({
+        'g:pyTestRunnerConfigFile': str(configfile),
+    }))
+    gtc = py_test_runner.get_test_command
+    assert gtc('tests.py') == 'cd src && pytest -ra'
+
+
+def test_get_test(monkeypatch):
+    monkeypatch.setattr(py_test_runner, 'vim', MockVim())
+    gt = py_test_runner.get_test
+    assert gt('tests.py', 'test_foo') == 'tests.py::test_foo'
+
+
+def test_get_clipboard_command(monkeypatch):
+    monkeypatch.setattr(py_test_runner, 'vim', MockVim())
+    gcc = py_test_runner.get_clipboard_command
+    assert gcc('tests.py', 'test_foo') == 'pytest -ra tests.py::test_foo'

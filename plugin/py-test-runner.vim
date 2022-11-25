@@ -1,13 +1,13 @@
 " File: py-test-runner.vim
 " Author: Marius Gedminas <marius@gedmin.as>
-" Version: 1.3.0
-" Last Modified: 2020-09-09
+" Version: 1.4.0
+" Last Modified: 2022-11-25
 "
 " Overview
 " --------
 " Vim script to run a unit test you're currently editing.
 "
-" Probably very specific to the way I work (Zope 3 style unit tests).
+" Probably very specific to the way I work.
 "
 " Installation
 " ------------
@@ -21,7 +21,7 @@
 "     Plug 'mgedmin/py-test-runner.vim'
 "
 " This plugin most likely requires vim 7.0 or maybe even 8.0.  It also needs
-" Vim with python support.
+" Vim with Python 3 support.
 "
 " Usage
 " -----

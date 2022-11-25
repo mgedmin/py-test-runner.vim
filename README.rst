@@ -6,9 +6,10 @@ Vim script to run the tests for the current file/class/function.
 Supports various Python test runners including
 
 - pytest
+- unittest autodiscovery
 - nose
-- zope.testrunner
 - django test
+- zope.testrunner
 
 Demo:
 
@@ -34,7 +35,8 @@ I recommend vim-plug_::
 You'll also need taghelper.vim_ (or the older pythonhelper.vim_), and I
 recommend asyncrun.vim_ too.
 
-Needs Vim built with Python support.
+Needs Vim built with Python 3 support.  (Python 2 might work too, but I make no
+promises about it staying working.)
 
 
 Usage
@@ -121,8 +123,9 @@ the initial linking via ::
 Configuration file
 ------------------
 
-This plugin reads **~/.vim/py-test-runner.cfg** if it exists.  It should be an INI
-file like this::
+This plugin reads **~/.vim/py-test-runner.cfg** (default filename, can be
+overridden by setting ``g:pyTestRunnerConfigFile``) if it exists.  It should be
+an INI file like this::
 
     [default]
     runner = pytest
@@ -149,8 +152,8 @@ The ``[default]`` section has the following settings:
 **runner**
 
     Specifies the default test runner.  If omitted, the default is ``pytest``.
-    You can use any of the predefined test runners (``pytest``, ``nose``,
-    ``zope``, and ``django``), or any custom test runner if you have a
+    You can use any of the predefined test runners (``pytest``, ``unittest``,
+    ``nose``, ``zope``, and ``django``), or any custom test runner if you have a
     corresponding ``[runner:foo]`` section.
 
     This setting can be overridden by ``[path:...]`` sections and manually,
@@ -206,18 +209,20 @@ following settings:
     The full command is constructed from ``command`` and the multiple
     ``filter_for_...`` settings in the following order:
 
+    #. cd workdir, if workdir is not blank
     #. command
     #. filter_for_file, if not blank
     #. filter_for_directory, if not blank
     #. filter_for_package, if not blank
     #. filter_for_module, if not blank
-    #. one of filter_for_function, filter_for_doctest, filter_for_class,
-       filter_for_method, whichever is applicable
+    #. one of filter_for_function, filter_for_doctest, filer_for_doctest_file,
+       filter_for_class, filter_for_method, whichever is applicable
 
     As a special case, if filter_for_function (or filter_for_doctest, or
-    filter_for_class, or filter_for_method, whichever was picked) mentions the
-    ``{filename}`` placeholder, filter_for_file, filter_for_directory,
-    filter_for_package and filter_for_module will be skipped.
+    filter_for_doctest_file, or filter_for_class, or filter_for_method,
+    whichever was picked) mentions the ``{filename}`` placeholder,
+    filter_for_file, filter_for_directory, filter_for_package and
+    filter_for_module will be skipped.
 
 
 **filter_for_file**
@@ -230,7 +235,8 @@ following settings:
         filter_for_file = {filename}
 
     Whether the ``{filename}`` placeholder is replaced with a relative or
-    absolute filename depends on the ``absolute_filenames`` setting.
+    absolute filename depends on the ``absolute_filenames`` and
+    ``relative_filenames`` settings.
 
     You will want to specify either ``filter_for_file`` or
     ``filter_for_module``, but not both.  (I don't know what will happen
@@ -249,7 +255,8 @@ following settings:
         filter_for_directory = {directory}
 
     Whether the ``{directory}`` placeholder is replaced with a relative or
-    absolute filename depends on the ``absolute_filenames`` setting.
+    absolute filename depends on the ``absolute_filenames`` and
+    ``relative_filenames`` settings.
 
     You will want to specify either ``filter_for_directory`` or
     ``filter_for_filename``, but not both.  (I don't know what will happen
@@ -308,7 +315,7 @@ following settings:
 
     Specifies how to tell the test runner which test function is interesting.
 
-    Filtering by test function requires pythonhelper.vim_ to be installed.
+    Filtering by test function requires taghelper.vim_ to be installed.
 
     Examples::
 
@@ -326,7 +333,7 @@ following settings:
     Specifies how to tell the test runner which doctest function is
     interesting.
 
-    Filtering by test function requires pythonhelper.vim_ to be installed.
+    Filtering by test function requires taghelper.vim_ to be installed.
 
     Regular functions from doctest functions are distinguished by name
     (functions starting with ``test`` are assumed to be regular functions).
@@ -339,8 +346,32 @@ following settings:
         [runner:pytest]
         filter_for_doctest = -k {function}
 
+        [runner:pytest]
+        filter_for_doctest = {filename}::{full_module}.{function}
+
     If this setting is not specified, ``filter_for_function`` is used
     instead for doctest functions as well.
+
+    This setting can be overridden by ``[path:...]`` sections.
+
+
+**filter_for_doctest_file**
+
+    Specifies how to tell the test runner which doctest file is
+    interesting.
+
+    Doctest files are recognized by their extension (.txt, .rst, .test).
+
+    Examples::
+
+        [runner:pytest]
+        filter_for_doctest_file = -k {function}
+
+    The filename (without directory) is used as the "function name" in the
+    filter, hence the ``{function}`` in the above example.
+
+    If this setting is not specified, ``filter_for_doctest`` or
+    ``filter_for_function`` is used instead.
 
     This setting can be overridden by ``[path:...]`` sections.
 
@@ -369,7 +400,7 @@ following settings:
 
     Specifies how to tell the test runner which test method is interesting.
 
-    Filtering by test method requires pythonhelper.vim_ to be installed.
+    Filtering by test method requires taghelper.vim_ to be installed.
 
     Examples::
 
@@ -399,9 +430,71 @@ following settings:
     Set to a false value (``false``, ``no``, ``0``) if you want ``{filename}``
     and ``{directory}`` placeholders to be exactly as they appear in Vim
     (so they could be absolute or relative, depending on how you opened
-    the file).
+    the file), as long as unless ``relative_filenames`` is also set to a false
+    value.
 
     Defauls to false.  Can be overridden by ``[path:...]`` sections.
+
+    If both ``absolute_filenames`` and ``relative_filenames`` are enabled,
+    ``absolute_filenames`` take precedence.
+
+
+**relative_filenames**
+
+    Set to a true value (``true``, ``yes``, ``1``) if you want ``{filename}``
+    and ``{directory}`` placeholders to be made relative.
+
+    The filenames are made relative to the directory named in the
+    ``relative_to`` setting, if set, otherwise the ``workdir`` setting, if set,
+    otherwise to the current working directory.
+
+    This is helpful when the test runner script changes its working directory
+    before it starts looking for files.
+
+    Set to a false value (``false``, ``no``, ``0``) if you want ``{filename}``
+    and ``{directory}`` placeholders to be exactly as they appear in Vim
+    (so they could be absolute or relative, depending on how you opened
+    the file), as long as unless ``relative_filenames`` is also set to a false
+    value.
+
+    Defauls to false.  Can be overridden by ``[path:...]`` sections.
+
+    If both ``absolute_filenames`` and ``relative_filenames`` are enabled,
+    ``absolute_filenames`` take precedence.
+
+
+**relative_to**
+
+    Set to a directory name when you want to use filenames relative to
+    somewhere that is not the current working directory.
+
+    Example::
+
+        [path:~/src/project/alembic]
+        runner = pytest
+        command = tox -c alembic/ --
+        absolute_filenames = false
+        relative_filenames = true
+        relative_to = alembic/
+
+    Defaults to empty string.  Can be overridden by ``[path:...]`` sections.
+
+
+**workdir**
+
+    Set to a directory name when you want to change the working directory
+    before running the test command.
+
+    Example::
+
+        [path:~/src/project/alembic]
+        runner = pytest
+        command = tox --
+        workdir = alembic/
+
+    This will run ``cd alembic/ && tox -- ...``
+
+    Defaults to empty string.  Can be overridden by ``[path:...]`` sections.
 
 
 **clipboard_extras**
@@ -477,21 +570,26 @@ identified by path names and have the following settings:
 **filter_for_module**,
 **filter_for_function**,
 **filter_for_doctest**,
+**filter_for_doctest_file**,
 **filter_for_class**,
 **filter_for_method**
+**ignore_functions_and_methods**
 
     Override the corresponding setting from the ``[runner:...]`` section.
 
     You're not expected to ever need this.
 
 **absolute_filenames**,
+**relative_filenames**,
+**relative_to**,
+**workdir**,
 **clipboard_extras**,
 **clipboard_extras_suffix**
 
     Override the corresponding setting from the ``[runner:...]`` section.
 
     These look like settings it can make sense to override on a
-    per-project basis.  Maybe.
+    per-project basis.
 
 
 Global variables
@@ -509,7 +607,14 @@ The following global variables are used:
 
       command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
 
-    so you can run commands in the background
+    so you can run commands in the background.
+
+**g:pyTestRunnerConfigFile** (default: "")
+
+    Config file to read.  If blank, the plugin reads ~/.vim/py-test-runner.cfg.
+
+    It makes sense to set it if you use NeoVim and want your py-test-runner.cfg
+    in ~/.config/nvim/ instead of the default location.
 
 **g:pyTestRunner** (default: "")
 
@@ -749,7 +854,7 @@ The following global variables are **no longer used**:
 Bugs
 ----
 
-- Test coverage is incomplete
+- various corner cases for lesser used test runners might not work
 
 - [path:...] runner=... probably overrides g:pyTestRunner, contradicting
   the documentation
@@ -763,7 +868,7 @@ Bugs
 Copyright
 ---------
 
-``test-runner.vim`` was written by Marius Gedminas <marius@gedmin.as>.
+``py-test-runner.vim`` was written by Marius Gedminas <marius@gedmin.as>.
 Licence: MIT.
 
 
