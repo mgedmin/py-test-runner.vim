@@ -99,5 +99,6 @@ function pytestrunner#copy_test_under_cursor()
   if l:cmd != ""
     echo l:cmd
     let @* = l:cmd
+    let @+ = l:cmd
   endif
 endf

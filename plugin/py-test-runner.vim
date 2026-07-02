@@ -1,7 +1,7 @@
 " File: py-test-runner.vim
 " Author: Marius Gedminas <marius@gedmin.as>
-" Version: 1.4.0
-" Last Modified: 2022-11-25
+" Version: 1.4.1
+" Last Modified: 2026-07-02
 "
 " Overview
 " --------
@@ -42,7 +42,7 @@
 " cursor away while editing)
 "
 " :CopyTestUnderCursor -- copies the command line to run the test into the
-" X11 selection
+" system clipboard (and selection too)
 "
 
 " Backwards compatibility
